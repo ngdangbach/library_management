@@ -1,0 +1,85 @@
+<template>
+  <form @submit.prevent="handleSubmit">
+    <div v-if="error" class="alert alert-danger">{{ error }}</div>
+
+    <div class="mb-3">
+      <label for="title" class="form-label">Tiêu đề sách (*)</label>
+      <input type="text" v-model="formData.title" class="form-control" id="title" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="author" class="form-label">Tác giả (*)</label>
+      <input type="text" v-model="formData.author" class="form-control" id="author" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="category" class="form-label">Thể loại (*)</label>
+      <input type="text" v-model="formData.category" class="form-control" id="category" required>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="publication_year" class="form-label">Năm xuất bản</label>
+        <input type="number" v-model.number="formData.publication_year" class="form-control" id="publication_year">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="total_copies" class="form-label">Tổng số bản (*)</label>
+        <input type="number" v-model.number="formData.total_copies" class="form-control" id="total_copies" required min="1">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Mô tả</label>
+      <textarea v-model="formData.description" class="form-control" id="description" rows="4"></textarea>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" @click="router.push('/books')" class="btn btn-secondary">Hủy</button>
+      <button type="submit" class="btn btn-primary" :disabled="isLoading">
+        <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status"></span>
+        {{ submitText }}
+      </button>
+    </div>
+  </form>
+</template>
+
+<script setup>
+    import { ref, watchEffect } from 'vue';
+    import { useRouter } from 'vue-router';
+
+    const props = defineProps({
+    book: Object, // Prop nhận sách (cho chế độ Edit)
+    isLoading: Boolean,
+    error: String,
+    submitText: { // Text của nút submit (Thêm mới/Cập nhật)
+        type: String,
+        default: 'Lưu'
+    }
+    });
+
+    const emit = defineEmits(['submit']);
+    const router = useRouter();
+
+    // State cục bộ cho form
+    const formData = ref({
+    title: '',
+    author: '',
+    category: '',
+    publication_year: new Date().getFullYear(),
+    total_copies: 1,
+    description: '',
+    });
+
+    // Theo dõi prop 'book'
+    // Nếu 'book' thay đổi (chế độ Edit), cập nhật formData
+    watchEffect(() => {
+    if (props.book) {
+        formData.value = { ...props.book };
+    }
+    });
+
+    const handleSubmit = () => {
+    // Gửi sự kiện 'submit' lên component cha (Create/Edit)
+    emit('submit', formData.value);
+    };
+</script>
